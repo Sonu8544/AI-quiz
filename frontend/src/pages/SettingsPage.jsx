@@ -35,7 +35,9 @@ function SettingsPage() {
       navigate("/quiz-detail");
     } catch (err) {
       console.error(err);
-      setError("Failed to generate quiz. Please try again.");
+      // Display the actual error message from the backend if available
+      const errorMessage = err?.response?.data?.error || err?.message || "Failed to generate quiz. Please try again.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

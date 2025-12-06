@@ -37,6 +37,14 @@ mongoose
     console.log("MongoDB connected");
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+    }).on("error", (err) => {
+      if (err.code === "EADDRINUSE") {
+        console.error(`Port ${PORT} is already in use. Please free the port or use a different one.`);
+        console.error(`To find and kill the process using port ${PORT}, run: lsof -ti:${PORT} | xargs kill -9`);
+      } else {
+        console.error("Server error:", err);
+      }
+      process.exit(1);
     });
   })
   .catch((err) => {

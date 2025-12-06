@@ -37,7 +37,14 @@ router.post("/generate-quiz", async (req, res) => {
 
     let baseText = text || "";
     if (sourceType === "youtube" && youtubeUrl) {
-      baseText = await extractFromYoutube(youtubeUrl);
+      try {
+        baseText = await extractFromYoutube(youtubeUrl);
+      } catch (youtubeError) {
+        // Return YouTube-specific errors with proper status code
+        return res.status(400).json({ 
+          error: youtubeError.message || "Failed to extract transcript from YouTube video" 
+        });
+      }
     }
 
     if (!baseText || baseText.trim().length === 0) {
@@ -60,7 +67,7 @@ router.post("/generate-quiz", async (req, res) => {
 
     res.json({ quizId: quiz._id, questions });
   } catch (err) {
-    console.error(err);
+    console.error("Quiz generation error:", err);
     if (err?.status === 429 || err?.message === "AI_QUOTA_EXCEEDED") {
       return res
         .status(429)
@@ -69,7 +76,11 @@ router.post("/generate-quiz", async (req, res) => {
             "AI provider quota or rate limit exceeded. Please update your API plan/keys or try again later.",
         });
     }
-    res.status(500).json({ error: "Failed to generate quiz" });
+    // Return the actual error message if it's a known error, otherwise generic message
+    const errorMessage = err?.message && err.message !== "Failed to generate quiz" 
+      ? err.message 
+      : "Failed to generate quiz";
+    res.status(500).json({ error: errorMessage });
   }
 });
 
